@@ -1,15 +1,13 @@
 const catchAsync = require("../../utils/catchAsync");
 const habitLogService = require("./../services/habitLogService");
+const userService = require("./../services/userService");
 
 exports.createLog = catchAsync(async (req, res, next) => {
   const { habitId } = req.params;
+  const { user } = req;
   const logData = req.body;
-  console.log(logData);
-  const createdLog = await habitLogService.createLog(
-    req.user,
-    habitId,
-    logData
-  );
+  const habit = await userService.verifyHabitOwnership(user, habitId);
+  const createdLog = await habitLogService.createLog(user, habit, logData);
   res.status(201).json({
     status: "OK",
     data: createdLog,
@@ -21,11 +19,8 @@ exports.getLogsByHabitId = catchAsync(async (req, res, next) => {
   const { user } = req;
   let { monthOffset } = req.query;
   monthOffset = monthOffset ? +monthOffset : 0;
-  const { habit, logs } = await habitLogService.getLogsByHabitId(
-    user,
-    habitId,
-    monthOffset
-  );
+  const habit = await userService.verifyHabitOwnership(user, habitId);
+  const logs = await habitLogService.getHabitLogs(user, habitId, monthOffset);
   res.status(200).json({
     status: "OK",
     data: { habit, logs },

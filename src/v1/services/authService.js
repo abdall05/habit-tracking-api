@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const sendEmail = require("./../../utils/email");
 const removeFields = require("./../../utils/removeFields");
+const userService = require("./userService");
 
 const { SALT_ROUNDS, JWT_SECRET, JWT_EXPIRES_IN, RESET_TOKEN_EXPIRES_IN } =
   process.env;
@@ -75,6 +76,9 @@ exports.verifyTokenAndGetUser = async function (token) {
     throw new AppError("Token has expired!. Please log in again.", 401);
   }
   removeFields(user, sensitiveFields);
+
+  //format user (habits (latesLog))
+  // userService.formatUserHabits(user);
 
   return user;
 };

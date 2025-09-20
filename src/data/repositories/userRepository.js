@@ -97,9 +97,10 @@ exports.updateHabitLatestLog = async function (userId, habitId, latestLogId) {
   );
 };
 exports.deleteHabit = async function (userId, habitId, session = null) {
+  const options = session ? { session } : {};
   await User.findByIdAndUpdate(
     userId,
     { $pull: { habits: { _id: habitId } } },
-    session
+    options
   );
 };

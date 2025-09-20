@@ -13,8 +13,6 @@ exports.signup = catchAsync(async (req, res, next) => {
 
 exports.signin = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
-  if (!email || !password)
-    throw new AppError("Email and Password are required!", 401);
   const response = await authService.login({ email, password });
   res.status(200).json({
     status: "OK",

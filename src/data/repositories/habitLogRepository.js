@@ -13,8 +13,9 @@ const sanitizeLog = (log) => {
   delete log.habitId;
 };
 
-exports.createLog = async function (logData) {
-  const createdLog = (await HabitLog.create(logData)).toObject();
+exports.createLog = async function (logData, session = null) {
+  const options = session ? { session } : {};
+  const createdLog = (await HabitLog.create([logData], options))[0].toObject();
   removeFields(createdLog, ["createdAt"]);
   return createdLog;
 };
@@ -62,6 +63,6 @@ exports.updateLogById = async function (logId, logData) {
   return newLog;
 };
 
-exports.deleteLogByHabitId = async function (habitId, session = null) {
+exports.deleteLogsByHabitId = async function (habitId, session = null) {
   await HabitLog.deleteMany({ habitId }, session);
 };

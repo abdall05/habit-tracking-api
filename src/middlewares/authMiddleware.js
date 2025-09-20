@@ -62,11 +62,19 @@ exports.validateSigninInput = (req, res, next) => {
 
 exports.validateSignupInput = (req, res, next) => {
   let { email, password, confirmPassword, name, timezone } = req.body;
+  const requiredFields = { email, password, confirmPassword, name, timezone };
+  const missingFields = Object.keys(requiredFields).filter(
+    (field) => !requiredFields[field]
+  );
+
+  if (missingFields.length > 0) {
+    throw new AppError(
+      `Missing required field(s): ${missingFields.join(", ")}`,
+      400
+    );
+  }
 
   email = validateEmail(email);
-
-  if (!email || !password || !confirmPassword || !name || !timezone)
-    throw new AppError("Missing required field!", 400);
   validatePasswordMatch(password, confirmPassword);
   req.body = { email, password, name, timezone };
   next();

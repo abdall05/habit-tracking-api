@@ -7,10 +7,18 @@ const {
   formatLocalDateString,
   getDateRangeForMonth,
 } = require("./../../utils/localDate");
+
+const formatLog = function (log, userTimezone) {
+  log.localDate = formatLocalDateString(log.localDate, userTimezone);
+};
+
+const formatLogs = function (logs, userTimezone) {
+  for (const log of logs) {
+    formatLog(log, userTimezone);
+  }
+};
 const AppError = require("../../utils/AppError");
-exports.createLog = async function (user, habitId, logData) {
-  const habit = user.habits.find((h) => h.id === habitId);
-  if (!habit) throw new AppError("Habit not found!", 404);
+exports.createLog = async function (user, habit, logData) {
   if (habit.type === "numeric") {
     if (logData.value === undefined)
       throw new AppError("value is required for numeric habits!", 403);
@@ -20,16 +28,16 @@ exports.createLog = async function (user, habitId, logData) {
   } else {
     logData.value = 1; //boolean
   }
-  logData.habitId = habitId;
+  logData.habitId = habit.id;
   const localDate = getLocalMidnightDate(user.timezone);
   logData.localDate = localDate;
   let createdLog;
   try {
     await withTransaction(async (session) => {
-      createdLog = await habitLogRepository.createLog(logData);
+      createdLog = await habitLogRepository.createLog(logData, session);
       await userRepository.updateHabitLatestLog(
         user.id,
-        habitId,
+        habit.id,
         createdLog.id,
         session
       );
@@ -39,26 +47,19 @@ exports.createLog = async function (user, habitId, logData) {
       throw new AppError("Habit already logged for this day", 409);
     throw error;
   }
-  createdLog.localDate = formatLocalDateString(
-    createdLog.localDate,
-    user.timezone
-  );
+  formatLog(createdLog);
   return createdLog;
 };
 
-exports.getLogsByHabitId = async function (user, habtiId, monthOffset) {
-  const { timezone: userTimezone, habits } = user;
+exports.getHabitLogs = async function (user, habitID, monthOffset) {
+  const { timezone: userTimezone } = user;
 
-  const habit = habits.find((h) => h.id === habtiId);
-  if (!habit) throw new AppError("Habit not found!", 404);
   const { from, to } = getDateRangeForMonth(userTimezone, monthOffset);
 
-  const logs = await habitLogRepository.getLogsByHabitId(habtiId, from, to);
-  for (const log of logs) {
-    log.localDate = formatLocalDateString(log.localDate, userTimezone);
-  }
-  habit.createdAt = formatLocalDateString(habit.createdAt, userTimezone);
-  return { habit, logs };
+  const logs = await habitLogRepository.getLogsByHabitId(habitID, from, to);
+  formatLogs(logs);
+
+  return { logs };
 };
 
 exports.updateLogById = async function (user, habitId, logId, newLogData) {
@@ -87,3 +88,5 @@ exports.updateLogById = async function (user, habitId, logId, newLogData) {
   );
   return updatedLog;
 };
+
+exports.formatLog = formatLog;
