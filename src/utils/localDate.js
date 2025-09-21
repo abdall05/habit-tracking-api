@@ -20,18 +20,17 @@ exports.formatLocalDateString = function (dateUTC, timezone) {
 exports.getDateRangeForMonth = function (userTimezone, monthOffset = 0) {
   const now = DateTime.now().setZone(userTimezone);
 
+  // Start of requested month
   const startOfMonth = now.plus({ months: monthOffset }).startOf("month");
-  const from = startOfMonth.toJSDate(); // UTC Date
 
-  let to;
+  // End of requested month
+  const endOfMonth =
+    monthOffset === 0
+      ? now.startOf("day") // current month → up to today
+      : startOfMonth.endOf("month"); // previous/future month → end of month
 
-  if (monthOffset === 0) {
-    // To is today's local midnight (start of day)
-    to = now.startOf("day").toJSDate();
-  } else {
-    // To is the first day of the *next* month (exclusive end)
-    to = startOfMonth.plus({ months: 1 }).startOf("month").toJSDate();
-  }
-
-  return { from, to };
+  return {
+    from: startOfMonth.toJSDate(),
+    to: endOfMonth.toJSDate(),
+  };
 };

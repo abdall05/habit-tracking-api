@@ -20,16 +20,22 @@ exports.createHabit = async function (user, habitData) {
   );
   return createdHabit;
 };
-const formatUserHabits = function (user) {
-  for (const habit of user.habits) {
-    habitLogService.formatLog(habit.latestLog, user.timezone);
-    habit.createdAt = formatLocalDateString(habit.createdAt, user.timezone);
+
+const formatHabit = function (habit, timezone) {
+  habitLogService.formatLog(habit.latestLog, timezone);
+  habit.createdAt = formatLocalDateString(habit.createdAt, timezone);
+};
+const formatUserHabits = function (habits, userTimezone) {
+  for (const habit of habits) {
+    formatHabit(habit, userTimezone);
   }
+};
+const formatUser = function (user) {
+  formatUserHabits(user.habits, user.timezone);
 };
 
 exports.getHabits = function (user) {
-  console.log(user);
-  formatUserHabits(user);
+  formatUser(user);
   const { habits } = user;
   return habits;
 };
@@ -53,4 +59,19 @@ exports.deleteHabit = async function (userId, habitId) {
   }
 };
 
-exports.formatUserHabits = formatUserHabits;
+exports.updateHabit = async function (user, habit, habitUpdateData) {
+  const { title, description, min, target, max } = habitUpdateData;
+  if (habit.type === "boolean") habitUpdateData = { title, description };
+  else {
+    habitUpdateData = { title, description, min, target, max };
+  }
+  const updatedHabit = await userRepository.updateHabit(
+    user.id,
+    habit.id,
+    habitUpdateData
+  );
+  formatHabit(updatedHabit, user.timezone);
+  return updatedHabit;
+};
+
+exports.formatHabit = formatHabit;

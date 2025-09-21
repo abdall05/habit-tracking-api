@@ -10,7 +10,10 @@ router
   .get(habitController.getHabits)
   .post(habitMiddleware.habitDataCleaner, habitController.createHabit);
 
-router.route("/:habitId").delete(habitController.deleteHabit);
+router
+  .route("/:habitId")
+  .delete(habitController.deleteHabit)
+  .patch(habitMiddleware.habitUpdateDataCleaner, habitController.updateHabit);
 router
   .route("/:habitId/logs")
   .post(habitLogMiddleware.cleanLogData, habitLogController.createLog)

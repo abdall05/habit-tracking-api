@@ -9,7 +9,7 @@ const {
 } = require("./../../utils/localDate");
 
 const formatLog = function (log, userTimezone) {
-  log.localDate = formatLocalDateString(log.localDate, userTimezone);
+  if (log) log.localDate = formatLocalDateString(log.localDate, userTimezone);
 };
 
 const formatLogs = function (logs, userTimezone) {
@@ -51,15 +51,17 @@ exports.createLog = async function (user, habit, logData) {
   return createdLog;
 };
 
-exports.getHabitLogs = async function (user, habitID, monthOffset) {
+exports.getHabitLogs = async function (user, habit, monthOffset) {
   const { timezone: userTimezone } = user;
 
-  const { from, to } = getDateRangeForMonth(userTimezone, monthOffset);
+  let { from, to } = getDateRangeForMonth(userTimezone, monthOffset);
 
-  const logs = await habitLogRepository.getLogsByHabitId(habitID, from, to);
+  const logs = await habitLogRepository.getLogsByHabitId(habit.id, from, to);
+  from = formatLocalDateString(from, userTimezone);
+  to = formatLocalDateString(to, userTimezone);
   formatLogs(logs);
 
-  return { logs };
+  return { from, to, logs };
 };
 
 exports.updateLogById = async function (user, habitId, logId, newLogData) {

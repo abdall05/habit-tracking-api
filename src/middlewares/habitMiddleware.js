@@ -20,3 +20,12 @@ exports.habitDataCleaner = function (req, res, next) {
   req.body = cleanedBody;
   next();
 };
+
+exports.habitUpdateDataCleaner = function (req, res, next) {
+  const { min, target, best, title, description } = req.body;
+
+  const cleanedBody = { min, target, best, title, description };
+
+  req.body = cleanedBody;
+  next();
+};

@@ -30,3 +30,21 @@ exports.deleteHabit = catchAsync(async (req, res, next) => {
     status: "OK",
   });
 });
+
+exports.updateHabit = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const habitId = req.params.habitId;
+  const updateData = req.body;
+  const userHabit = await userService.verifyHabitOwnership(user, habitId);
+  const updatedHabit = await userService.updateHabit(
+    user,
+    userHabit,
+    updateData
+  );
+  res.status(200).json({
+    status: "OK",
+    data: {
+      habit: updatedHabit,
+    },
+  });
+});

@@ -1,3 +1,4 @@
+const AppError = require("../../utils/AppError");
 const HabitLog = require("../models/habitLog");
 const User = require("./../models/user");
 const mongoose = require("mongoose");
@@ -103,4 +104,29 @@ exports.deleteHabit = async function (userId, habitId, session = null) {
     { $pull: { habits: { _id: habitId } } },
     options
   );
+};
+
+exports.updateHabit = async function (userId, habitId, updateData) {
+  const setFields = {};
+  for (const [key, value] of Object.entries(updateData)) {
+    setFields[`habits.$.${key}`] = value;
+  }
+
+  const updatedUser = await User.findOneAndUpdate(
+    { _id: userId, "habits._id": habitId },
+    { $set: setFields },
+    { new: true, runValidators: true }
+  ).populate("habits.latestLog");
+
+  if (!updatedUser) {
+    throw new AppError("User or habit not found", 404);
+  }
+
+  const updatedHabit = updatedUser.habits.id(habitId);
+  if (!updatedHabit) {
+    throw new AppError("Habit not found after update", 404);
+  }
+
+  sanitizeHabit(updatedHabit);
+  return updatedHabit;
 };

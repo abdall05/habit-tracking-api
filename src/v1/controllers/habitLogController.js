@@ -18,12 +18,20 @@ exports.getLogsByHabitId = catchAsync(async (req, res, next) => {
   const { habitId } = req.params;
   const { user } = req;
   let { monthOffset } = req.query;
-  monthOffset = monthOffset ? +monthOffset : 0;
+  monthOffset = monthOffset ? parseInt(monthOffset, 10) : 0;
+  if (isNaN(monthOffset) || monthOffset > 0) {
+    monthOffset = 0;
+  }
   const habit = await userService.verifyHabitOwnership(user, habitId);
-  const logs = await habitLogService.getHabitLogs(user, habitId, monthOffset);
+  let { from, to, logs } = await habitLogService.getHabitLogs(
+    user,
+    habit,
+    monthOffset
+  );
+  userService.formatHabit(habit);
   res.status(200).json({
     status: "OK",
-    data: { habit, logs },
+    data: { habit, from, to, logs },
   });
 });
 
